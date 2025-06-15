@@ -16,7 +16,7 @@ $cons_nome->bindValue(':pid', $_SESSION['login']);
 $cons_nome->execute();
 $row_nome = $cons_nome->fetch();
 
-// Exibe mensagem de boas-vindas
+// Exibe mensagem de boas-vindas com link de logout
 echo "Olá, " . $row_nome['user_log'] . " seja bem vindo!";
 echo "<a href='motorista.php?logout'>Logout</a>";
 
@@ -29,6 +29,7 @@ if (isset($_GET['logout'])) {
 
 <a href="entregas.php">Entregas</a>
 
+<!-- Formulário de cadastro de motorista -->
 <form action="motorista.php" method="POST">
     Nome do Motorista: 
     <input type="text" name="motorista" required
@@ -48,10 +49,10 @@ if (isset($_GET['logout'])) {
     <input type="submit" name="grava" value="Cadastrar Motorista" />
 </form>
 
-
 <?php
 include "conn.php";
 
+// Grava novo motorista no banco
 if (isset($_POST['grava'])) {
     $motorista = $_POST['motorista'];
     $veiculo = $_POST['veiculo'];
@@ -65,6 +66,7 @@ if (isset($_POST['grava'])) {
     echo "Gravado com sucesso!<br>";
 }
 
+// Exibe confirmação para exclusão
 if (isset($_GET['excluir'])) {
     $id = $_GET['id'];
     $nome = base64_decode($_GET['nome']);
@@ -73,6 +75,7 @@ if (isset($_GET['excluir'])) {
     echo "<a href='motorista.php'>Não</a>";
 }
 
+// Exclui motorista
 if (isset($_GET['exclusao'])) {
     $id = base64_decode($_GET['id']);
     $excluir = $conn->prepare('DELETE FROM motorista WHERE `id_mot` = :pid');
@@ -81,6 +84,7 @@ if (isset($_GET['exclusao'])) {
     echo "Excluído com sucesso!";
 }
 
+// Exibe formulário para alteração
 if (isset($_GET['alterar'])) {
     $id = base64_decode($_GET['id']);
     $alterar = $conn->prepare('SELECT * FROM `motorista` WHERE `id_mot`= :pid');
@@ -98,16 +102,17 @@ if (isset($_GET['alterar'])) {
 <?php
 }
 
+// Processa atualização de dados
 if (isset($_POST['altera'])) {
     $id = base64_decode($_POST['id']);
     $motorista = $_POST['motorista'];
     $veiculo = $_POST['veiculo'];
     $telefone = $_POST['telefone'];
     $altera = $conn->prepare('UPDATE `motorista` SET 
-    `nome_mot` = :pmotorista, 
-    `veiculo_mot` = :pveiculo,
-    `tel_mot` = :ptelefone 
-    WHERE `id_mot` = :pid');
+        `nome_mot` = :pmotorista, 
+        `veiculo_mot` = :pveiculo,
+        `tel_mot` = :ptelefone 
+        WHERE `id_mot` = :pid');
     $altera->bindValue(':pmotorista', $motorista);
     $altera->bindValue(':pveiculo', $veiculo);
     $altera->bindValue(':ptelefone', $telefone);
@@ -123,7 +128,7 @@ if (isset($_POST['altera'])) {
     <input type="submit" name="busca" value="Buscar">
 </form>
 
-<!-- Tabela de exibição de dados -->
+<!-- Exibição de motoristas cadastrados -->
 <table border="1">
     <tr>
         <th>Nome</th>

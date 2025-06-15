@@ -1,22 +1,27 @@
 <?php
+// Inicia a sessão PHP
 session_start();
 
+// Verifica se o usuário está logado; se não estiver, redireciona para a página de login
 if (!isset($_SESSION['login'])) {
     header('location:login.php');
-    exit();
+    exit(); // Interrompe a execução do script
 }
 
+// Inclui o arquivo de conexão com o banco de dados
 include "conn.php";
 
-// Buscar nome do usuário
+// Busca o nome do usuário logado com base no ID da sessão
 $cons_nome = $conn->prepare('SELECT * FROM login WHERE id_log = :pid');
 $cons_nome->bindValue(':pid', $_SESSION['login']);
 $cons_nome->execute();
 $row_nome = $cons_nome->fetch();
 
+// Exibe mensagem de boas-vindas e link de logout
 echo "Olá, " . htmlspecialchars($row_nome['user_log']) . ", seja bem-vindo! ";
 echo "<a href='entregas.php?logout'>Logout</a><br>";
 
+// Se o link de logout for acionado, destrói a sessão e redireciona para o login
 if (isset($_GET['logout'])) {
     session_destroy();
     header('location:login.php');
@@ -24,8 +29,10 @@ if (isset($_GET['logout'])) {
 }
 ?>
 
+<!-- Link para a página de motoristas -->
 <a href="motorista.php">Motorista</a>
 
+<!-- Formulário para cadastro de entregas -->
 <form action="entregas.php" method="POST">
     Nome do Motorista: 
     <input type="text" name="motorista" required
@@ -48,15 +55,15 @@ if (isset($_GET['logout'])) {
     <input type="submit" name="grava" value="Cadastrar Entrega">
 </form>
 
-
 <?php
-// Cadastrar nova entrega
+// Trata o cadastro de uma nova entrega
 if (isset($_POST['grava'])) {
     $motorista = $_POST['motorista'];
     $telefone = $_POST['telefone'];
     $empresa = $_POST['empresa'];
     $horario = $_POST['horario'];
 
+    // Prepara o SQL para inserir os dados da entrega
     $grava = $conn->prepare('INSERT INTO entregas (empresa_ent, motorista_ent, telefone_ent, horario_ent) VALUES (:pempresa, :pmotorista, :ptelefone, :phorario)');
     $grava->bindValue(':pempresa', $empresa);
     $grava->bindValue(':pmotorista', $motorista);
@@ -66,7 +73,7 @@ if (isset($_POST['grava'])) {
     echo "Entrega cadastrada com sucesso!<br>";
 }
 
-// Confirmação de exclusão
+// Confirmação de exclusão de uma entrega
 if (isset($_GET['excluir'])) {
     $id = $_GET['id'];
     $nome = base64_decode($_GET['nome']);
@@ -74,7 +81,7 @@ if (isset($_GET['excluir'])) {
     echo "<a href='entregas.php?exclusao&id=$id'>Sim</a> | <a href='entregas.php'>Não</a>";
 }
 
-// Excluir entrega
+// Exclusão da entrega após confirmação
 if (isset($_GET['exclusao'])) {
     $id = base64_decode($_GET['id']);
     $excluir = $conn->prepare('DELETE FROM entregas WHERE id_ent = :pid');
@@ -83,7 +90,7 @@ if (isset($_GET['exclusao'])) {
     echo "Entrega excluída com sucesso!";
 }
 
-// Formulário para alterar entrega
+// Formulário de alteração de entrega
 if (isset($_GET['alterar'])) {
     $id = base64_decode($_GET['id']);
     $busca = $conn->prepare('SELECT * FROM entregas WHERE id_ent = :pid');
@@ -91,6 +98,7 @@ if (isset($_GET['alterar'])) {
     $busca->execute();
     $row = $busca->fetch();
 ?>
+    <!-- Formulário preenchido com os dados atuais da entrega -->
     <form action="entregas.php" method="POST">
         <input type="hidden" name="id" value="<?php echo base64_encode($row['id_ent']); ?>">
         Nome do Motorista: <input type="text" name="motorista" value="<?php echo $row['motorista_ent']; ?>" required><br />
@@ -102,7 +110,7 @@ if (isset($_GET['alterar'])) {
 <?php
 }
 
-// Atualizar entrega
+// Atualiza os dados da entrega após alteração
 if (isset($_POST['altera'])) {
     $id = base64_decode($_POST['id']);
     $motorista = $_POST['motorista'];
@@ -121,11 +129,13 @@ if (isset($_POST['altera'])) {
 }
 ?>
 
+<!-- Formulário de busca de entregas por nome do motorista -->
 <form action="entregas.php" method="POST">
     <input type="text" name="procura" placeholder="Buscar por motorista">
     <input type="submit" name="busca" value="Buscar">
 </form>
 
+<!-- Tabela com lista das entregas -->
 <table border="1">
     <tr>
         <th>Empresa</th>
@@ -135,18 +145,23 @@ if (isset($_POST['altera'])) {
         <th>Ações</th>
     </tr>
     <?php
+    // Se foi feita uma busca, filtra os resultados
     if (isset($_POST['busca'])) {
         $procura = "%" . $_POST['procura'] . "%";
         $consulta = $conn->prepare('SELECT * FROM entregas WHERE motorista_ent LIKE :pbusca');
         $consulta->bindValue(':pbusca', $procura);
     } else {
+        // Caso contrário, busca todas as entregas
         $consulta = $conn->prepare('SELECT * FROM entregas');
     }
+
     $consulta->execute();
 
+    // Verifica se existem resultados
     if ($consulta->rowCount() == 0) {
         echo "<tr><td colspan='5'>Nenhum registro encontrado!</td></tr>";
     } else {
+        // Exibe cada entrega em uma linha da tabela
         while ($linha = $consulta->fetch()) {
             echo "<tr>";
             echo "<td>" . $linha['empresa_ent'] . "</td>";
