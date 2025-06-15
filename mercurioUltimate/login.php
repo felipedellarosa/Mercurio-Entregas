@@ -42,7 +42,7 @@ if (isset($_POST['logar'])) {
         $_SESSION['login'] = $id_login;
 
         // Redireciona para a página principal
-        header('location:index.php');
+        header('location:motorista.php');
     }
 }
 ?>
